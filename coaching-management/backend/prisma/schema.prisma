@@ -43,31 +43,30 @@ model Role {
 }
 
 model User {
-  id            String    @id @default(uuid()) @db.Uuid
-  roleId        String    @db.Uuid @map("role_id")
-  username      String    @unique @db.VarChar(100)
-  email         String?   @unique @db.VarChar(255)
-  passwordHash  String    @db.VarChar(255) @map("password_hash")
-  fullName      String    @db.VarChar(150) @map("full_name")
-  isActive      Boolean   @default(true) @map("is_active")
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  id           String   @id @default(uuid()) @db.Uuid
+  roleId       String   @map("role_id") @db.Uuid
+  username     String   @unique @db.VarChar(100)
+  email        String?  @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  fullName     String   @map("full_name") @db.VarChar(150)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  role          Role      @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  students      Student[] @relation("StudentCreator")
-  courses       Course[]  @relation("CourseCreator")
-  payments      Payment[] @relation("ReceptionistPayments")
-  approvals     PaymentApproval[] @relation("FoundingMemberApprovals")
-  approvalLogs  PaymentApprovalLog[] @relation("ApprovalActor")
-  auditLogs     AuditLog[] @relation("UserAuditLogs")
+  role         Role                 @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  students     Student[]            @relation("StudentCreator")
+  courses      Course[]             @relation("CourseCreator")
+  payments     Payment[]            @relation("ReceptionistPayments")
+  approvals    PaymentApproval[]    @relation("FoundingMemberApprovals")
+  approvalLogs PaymentApprovalLog[] @relation("ApprovalActor")
+  auditLogs    AuditLog[]           @relation("UserAuditLogs")
 
   @@map("users")
 }
 
 model AcademicBatch {
-  id          String       @id @default(uuid()) @db.Uuid
-  name        String       @db.VarChar(150)
-  institution String?      @db.VarChar(150)
-  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(150)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
   students    Student[]
   enrollments Enrollment[]
@@ -77,24 +76,22 @@ model AcademicBatch {
 
 model Student {
   id              String        @id @default(uuid()) @db.Uuid
-  tokenNumber     String        @unique @db.VarChar(50) @map("token_number")
-  academicBatchId String        @db.Uuid @map("academic_batch_id")
-  fullName        String        @db.VarChar(150) @map("full_name")
+  academicBatchId String        @map("academic_batch_id") @db.Uuid
+  fullName        String        @map("full_name") @db.VarChar(150)
   roll            String        @db.VarChar(50)
-  phoneSelf       String        @db.VarChar(30) @map("phone_self")
-  phoneGuardian   String?       @db.VarChar(30) @map("phone_guardian")
-  bloodGroup      String?       @db.VarChar(10) @map("blood_group")
-  schoolCollege   String        @db.VarChar(150) @map("school_college")
-  photoUrl        String?       @db.Text @map("photo_url")
-  createdBy       String        @db.Uuid @map("created_by")
+  phoneSelf       String        @map("phone_self") @db.VarChar(30)
+  phoneGuardian   String?       @map("phone_guardian") @db.VarChar(30)
+  bloodGroup      String?       @map("blood_group") @db.VarChar(10)
+  schoolCollege   String        @map("school_college") @db.VarChar(150)
+  photoUrl        String?       @map("photo_url") @db.Text
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
-
+  enrollments     Enrollment[]
   academicBatch   AcademicBatch @relation(fields: [academicBatchId], references: [id], onDelete: Restrict)
   creator         User          @relation("StudentCreator", fields: [createdBy], references: [id], onDelete: Restrict)
-  enrollments     Enrollment[]
+  createdBy       String        @map("created_by") @db.Uuid
 
   @@unique([roll, academicBatchId], name: "roll_batch_unique")
-  @@index([tokenNumber])
+  @@index([roll])
   @@map("students")
 }
 
@@ -108,14 +105,14 @@ model CourseCategory {
 }
 
 model Course {
-  id          String         @id @default(uuid()) @db.Uuid
-  name        String         @unique @db.VarChar(150)
-  categoryId  String         @db.Uuid @map("category_id")
-  fee         Decimal        @db.Decimal(10, 2)
-  description String?        @db.Text
-  isActive    Boolean        @default(true) @map("is_active")
-  createdBy   String         @db.Uuid @map("created_by")
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique @db.VarChar(150)
+  categoryId  String   @map("category_id") @db.Uuid
+  fee         Decimal  @db.Decimal(10, 2)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdBy   String   @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
   category    CourseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   creator     User           @relation("CourseCreator", fields: [createdBy], references: [id], onDelete: Restrict)
@@ -125,19 +122,19 @@ model Course {
 }
 
 model Enrollment {
-  id              String        @id @default(uuid()) @db.Uuid
-  studentId       String        @db.Uuid @map("student_id")
-  courseId        String        @db.Uuid @map("course_id")
-  academicBatchId String        @db.Uuid @map("academic_batch_id")
-  agreedFee       Decimal       @db.Decimal(10, 2) @map("agreed_fee")
+  id              String           @id @default(uuid()) @db.Uuid
+  studentId       String           @map("student_id") @db.Uuid
+  courseId        String           @map("course_id") @db.Uuid
+  academicBatchId String           @map("academic_batch_id") @db.Uuid
+  agreedFee       Decimal          @map("agreed_fee") @db.Decimal(10, 2)
   status          EnrollmentStatus @default(ACTIVE)
-  enrolledAt      DateTime      @default(now()) @map("enrolled_at") @db.Timestamp(6)
+  enrolledAt      DateTime         @default(now()) @map("enrolled_at") @db.Timestamp(6)
 
-  student         Student       @relation(fields: [studentId], references: [id], onDelete: Restrict)
-  course          Course        @relation(fields: [courseId], references: [id], onDelete: Restrict)
-  academicBatch   AcademicBatch @relation(fields: [academicBatchId], references: [id], onDelete: Restrict)
-  payments        Payment[]
-  paymentCards    PaymentCard[]
+  student       Student       @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  course        Course        @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  academicBatch AcademicBatch @relation(fields: [academicBatchId], references: [id], onDelete: Restrict)
+  payments      Payment[]
+  paymentCards  PaymentCard[]
 
   @@unique([studentId, courseId], name: "student_course_unique")
   @@map("enrollments")
@@ -145,67 +142,65 @@ model Enrollment {
 
 model Payment {
   id                   String               @id @default(uuid()) @db.Uuid
-  paymentReference     String               @unique @db.VarChar(100) @map("payment_reference")
-  enrollmentId         String               @db.Uuid @map("enrollment_id")
-  amountReceived       Decimal              @db.Decimal(10, 2) @map("amount_received")
-  remainingBalance     Decimal              @db.Decimal(10, 2) @map("remaining_balance")
-  paymentMethod        String               @db.VarChar(50) @map("payment_method")
-  transactionReference String?              @db.VarChar(100) @map("transaction_reference")
+  verificationToken    String?              @unique @map("verification_token") @db.VarChar(100)
+  billingPeriodStart   DateTime?            @map("billing_period_start") @db.Timestamp(6)
+  billingPeriodEnd     DateTime?            @map("billing_period_end") @db.Timestamp(6)
+  enrollmentId         String               @map("enrollment_id") @db.Uuid
+  amountReceived       Decimal              @map("amount_received") @db.Decimal(10, 2)
+  remainingBalance     Decimal              @map("remaining_balance") @db.Decimal(10, 2)
+  transactionReference String?              @map("transaction_reference") @db.VarChar(100)
   paymentDate          DateTime             @default(now()) @map("payment_date") @db.Timestamp(6)
   status               PaymentStatus        @default(PENDING)
-  receptionistId       String               @db.Uuid @map("receptionist_id")
-  remarks              String?              @db.Text
   createdAt            DateTime             @default(now()) @map("created_at") @db.Timestamp(6)
-
   enrollment           Enrollment           @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
-  receptionist         User                 @relation("ReceptionistPayments", fields: [receptionistId], references: [id], onDelete: Restrict)
   approval             PaymentApproval?
   approvalLogs         PaymentApprovalLog[]
+  receptionist         User                 @relation("ReceptionistPayments", fields: [receptionistId], references: [id], onDelete: Restrict)
+  receptionistId       String               @map("receptionist_id") @db.Uuid
 
   @@index([status])
   @@map("payments")
 }
 
 model PaymentApproval {
-  id               String        @id @default(uuid()) @db.Uuid
-  paymentId        String        @unique @db.Uuid @map("payment_id")
-  foundingMemberId String        @db.Uuid @map("founding_member_id")
-  status           PaymentStatus
-  rejectionReason  String?       @db.Text @map("rejection_reason")
-  reviewedAt       DateTime      @default(now()) @map("reviewed_at") @db.Timestamp(6)
-
-  payment          Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  foundingMember   User          @relation("FoundingMemberApprovals", fields: [foundingMemberId], references: [id], onDelete: Restrict)
+  id              String        @id @default(uuid()) @db.Uuid
+  paymentId       String        @unique @map("payment_id") @db.Uuid
+  status          PaymentStatus
+  rejectionReason String?       @map("rejection_reason") @db.Text
+  reviewedAt      DateTime      @default(now()) @map("reviewed_at") @db.Timestamp(6)
+  payment         Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  approvedBy      User          @relation("FoundingMemberApprovals", fields: [approvedById], references: [id], onDelete: Restrict)
+  approvedById    String        @map("founding_member_id") @db.Uuid
 
   @@map("payment_approvals")
 }
 
 model PaymentApprovalLog {
   id              String        @id @default(uuid()) @db.Uuid
-  paymentId       String        @db.Uuid @map("payment_id")
-  actorId         String        @db.Uuid @map("actor_id")
+  paymentId       String        @map("payment_id") @db.Uuid
+  actorId         String        @map("actor_id") @db.Uuid
   action          String        @db.VarChar(50)
   previousStatus  PaymentStatus @map("previous_status")
   newStatus       PaymentStatus @map("new_status")
-  rejectionReason String?       @db.Text @map("rejection_reason")
+  rejectionReason String?       @map("rejection_reason") @db.Text
   comments        String?       @db.Text
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
 
-  payment         Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  actor           User          @relation("ApprovalActor", fields: [actorId], references: [id], onDelete: Restrict)
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  actor   User    @relation("ApprovalActor", fields: [actorId], references: [id], onDelete: Restrict)
 
   @@map("payment_approval_logs")
 }
 
 model PaymentCard {
   id           String     @id @default(uuid()) @db.Uuid
-  enrollmentId String     @db.Uuid @map("enrollment_id")
-  qrToken      String     @unique @db.VarChar(255) @map("qr_token")
-  cardNumber   String     @unique @db.VarChar(100) @map("card_number")
+  enrollmentId String     @map("enrollment_id") @db.Uuid
+  qrToken      String     @unique @map("qr_token") @db.VarChar(255)
+  cardNumber   String     @unique @map("card_number") @db.VarChar(100)
   issuedAt     DateTime   @default(now()) @map("issued_at") @db.Timestamp(6)
   status       CardStatus @default(ACTIVE)
 
-  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
 
   @@index([qrToken])
   @@map("payment_cards")
@@ -213,14 +208,14 @@ model PaymentCard {
 
 model AuditLog {
   id        String   @id @default(uuid()) @db.Uuid
-  userId    String?  @db.Uuid @map("user_id")
+  userId    String?  @map("user_id") @db.Uuid
   action    String   @db.VarChar(100)
   module    String   @db.VarChar(100)
   details   Json?
-  ipAddress String?  @db.VarChar(45) @map("ip_address")
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  user      User?    @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([module])
   @@index([createdAt])

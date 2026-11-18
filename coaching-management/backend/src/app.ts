@@ -20,12 +20,14 @@ app.get('/health', (req: express.Request, res: express.Response) => {
 });
 
 // API Routes with login rate limiting
-app.use('/api/auth/login', loginRateLimiter);
-app.use('/api/auth', authRoutes);
+app.use('/api/createStudent', loginRateLimiter, (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  next();
+});
+
 
 // Centralized Error Handler
-app.use(errorHandler);
+app.use(errorHandler, (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  next();
+});
 
 export default app;
-
-
