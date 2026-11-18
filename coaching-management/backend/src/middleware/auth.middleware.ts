@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../config/env.js';
+import prisma from '../config/prisma.js';
 
 export interface AuthenticatedUser {
   userId: string;
@@ -16,11 +17,14 @@ declare global {
   }
 }
 
-export const authenticate = (
+const JWT_ISSUER = 'coaching-management-backend';
+const JWT_AUDIENCE = 'coaching-management-client';
+
+export const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -36,10 +40,25 @@ export const authenticate = (
 
     const token = authHeader.split(' ')[1];
 
-    const decoded = jwt.verify(token, config.JWT_SECRET) as AuthenticatedUser;
+    let decoded: AuthenticatedUser;
+    try {
+      decoded = jwt.verify(token, config.JWT_SECRET, {
+        issuer: JWT_ISSUER,
+        audience: JWT_AUDIENCE,
+      }) as AuthenticatedUser;
+    } catch (jwtError: any) {
+      // Normalize all JWT verification errors to 401
+      res.status(401).json({
+        success: false,
+        error: {
+          message: jwtError.name === 'TokenExpiredError' ? 'Token has expired.' : 'Invalid token signature, issuer, audience, or malformed token.',
+        },
+      });
+      return;
+    }
 
     if (!decoded || !decoded.userId || !decoded.role) {
-      res.status(403).json({
+      res.status(401).json({
         success: false,
         error: {
           message: 'Invalid token payload.',
@@ -48,35 +67,32 @@ export const authenticate = (
       return;
     }
 
+    // Verify current user existence and active status in database to prevent stale tokens after suspension/role changes
+    const userInDb = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      include: { role: true },
+    });
+
+    if (!userInDb || !userInDb.isActive) {
+      res.status(401).json({
+        success: false,
+        error: {
+          message: 'Account is deactivated, suspended, or no longer exists.',
+        },
+      });
+      return;
+    }
+
+    // Ensure role matches current database role (preventing stale role permissions)
     req.user = {
-      userId: decoded.userId,
-      role: decoded.role,
-      email: decoded.email,
+      userId: userInDb.id,
+      role: userInDb.role.name,
+      email: userInDb.email || undefined,
     };
 
     next();
   } catch (error: any) {
-    if (error.name === 'TokenExpiredError') {
-      res.status(401).json({
-        success: false,
-        error: {
-          message: 'Token has expired.',
-        },
-      });
-      return;
-    }
-
-    if (error.name === 'JsonWebTokenError') {
-      res.status(403).json({
-        success: false,
-        error: {
-          message: 'Invalid token.',
-        },
-      });
-      return;
-    }
-
-    res.status(500).json({
+    res.status(401).json({
       success: false,
       error: {
         message: 'Internal authentication error.',
@@ -86,3 +102,4 @@ export const authenticate = (
 };
 
 export default authenticate;
+

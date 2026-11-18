@@ -3,8 +3,12 @@ import cors from 'cors';
 import helmet from 'helmet';
 import authRoutes from './modules/auth/routes/auth.routes.js';
 import errorHandler from './middleware/error.middleware.js';
+import { loginRateLimiter } from './middleware/rateLimit.middleware.js';
 
 const app = express();
+
+// Trust proxy correctly for accurate IP detection behind reverse proxies
+app.set('trust proxy', true);
 
 app.use(helmet());
 app.use(cors());
@@ -15,11 +19,13 @@ app.get('/health', (req: express.Request, res: express.Response) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// API Routes
+// API Routes with login rate limiting
+app.use('/api/auth/login', loginRateLimiter);
 app.use('/api/auth', authRoutes);
 
 // Centralized Error Handler
 app.use(errorHandler);
 
 export default app;
+
 
