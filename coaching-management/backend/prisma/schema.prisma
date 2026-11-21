@@ -37,60 +37,23 @@ model Role {
   id          String   @id @default(uuid()) @db.Uuid
   name        RoleName @unique
   description String?  @db.Text
-  users       User[]
 
   @@map("roles")
 }
 
-model User {
-  id           String   @id @default(uuid()) @db.Uuid
-  roleId       String   @map("role_id") @db.Uuid
-  username     String   @unique @db.VarChar(100)
-  email        String?  @unique @db.VarChar(255)
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  fullName     String   @map("full_name") @db.VarChar(150)
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-
-  role         Role                 @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  students     Student[]            @relation("StudentCreator")
-  courses      Course[]             @relation("CourseCreator")
-  payments     Payment[]            @relation("ReceptionistPayments")
-  approvals    PaymentApproval[]    @relation("FoundingMemberApprovals")
-  approvalLogs PaymentApprovalLog[] @relation("ApprovalActor")
-  auditLogs    AuditLog[]           @relation("UserAuditLogs")
-
-  @@map("users")
-}
-
-model AcademicBatch {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String   @db.VarChar(150)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-
-  students    Student[]
-  enrollments Enrollment[]
-
-  @@map("academic_batches")
-}
-
 model Student {
-  id              String        @id @default(uuid()) @db.Uuid
-  academicBatchId String        @map("academic_batch_id") @db.Uuid
-  fullName        String        @map("full_name") @db.VarChar(150)
-  roll            String        @db.VarChar(50)
-  phoneSelf       String        @map("phone_self") @db.VarChar(30)
-  phoneGuardian   String?       @map("phone_guardian") @db.VarChar(30)
-  bloodGroup      String?       @map("blood_group") @db.VarChar(10)
-  schoolCollege   String        @map("school_college") @db.VarChar(150)
-  photoUrl        String?       @map("photo_url") @db.Text
-  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
-  enrollments     Enrollment[]
-  academicBatch   AcademicBatch @relation(fields: [academicBatchId], references: [id], onDelete: Restrict)
-  creator         User          @relation("StudentCreator", fields: [createdBy], references: [id], onDelete: Restrict)
-  createdBy       String        @map("created_by") @db.Uuid
+  id            String       @id @default(uuid()) @db.Uuid
+  fullName      String       @map("full_name") @db.VarChar(150)
+  roll          String       @unique @db.VarChar(50)
+  phoneSelf     String       @map("phone_self") @db.VarChar(30)
+  phoneGuardian String?      @map("phone_guardian") @db.VarChar(30)
+  bloodGroup    String?      @map("blood_group") @db.VarChar(10)
+  schoolCollege String       @map("school_college") @db.VarChar(150)
+  photoUrl      String?      @map("photo_url") @db.Text
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  enrollments   Enrollment[]
+  createdBy     String       @map("created_by") @db.Uuid
 
-  @@unique([roll, academicBatchId], name: "roll_batch_unique")
   @@index([roll])
   @@map("students")
 }
@@ -105,36 +68,31 @@ model CourseCategory {
 }
 
 model Course {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @unique @db.VarChar(150)
-  categoryId  String   @map("category_id") @db.Uuid
-  fee         Decimal  @db.Decimal(10, 2)
-  description String?  @db.Text
-  isActive    Boolean  @default(true) @map("is_active")
-  createdBy   String   @map("created_by") @db.Uuid
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-
+  id          String         @id @default(uuid()) @db.Uuid
+  name        String         @unique @db.VarChar(150)
+  categoryId  String         @map("category_id") @db.Uuid
+  fee         Decimal        @db.Decimal(10, 2)
+  description String?        @db.Text
+  isActive    Boolean        @default(true) @map("is_active")
+  createdBy   String         @map("created_by") @db.Uuid
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
   category    CourseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  creator     User           @relation("CourseCreator", fields: [createdBy], references: [id], onDelete: Restrict)
   enrollments Enrollment[]
 
   @@map("courses")
 }
 
 model Enrollment {
-  id              String           @id @default(uuid()) @db.Uuid
-  studentId       String           @map("student_id") @db.Uuid
-  courseId        String           @map("course_id") @db.Uuid
-  academicBatchId String           @map("academic_batch_id") @db.Uuid
-  agreedFee       Decimal          @map("agreed_fee") @db.Decimal(10, 2)
-  status          EnrollmentStatus @default(ACTIVE)
-  enrolledAt      DateTime         @default(now()) @map("enrolled_at") @db.Timestamp(6)
-
-  student       Student       @relation(fields: [studentId], references: [id], onDelete: Restrict)
-  course        Course        @relation(fields: [courseId], references: [id], onDelete: Restrict)
-  academicBatch AcademicBatch @relation(fields: [academicBatchId], references: [id], onDelete: Restrict)
-  payments      Payment[]
-  paymentCards  PaymentCard[]
+  id           String           @id @default(uuid()) @db.Uuid
+  studentId    String           @map("student_id") @db.Uuid
+  courseId     String           @map("course_id") @db.Uuid
+  agreedFee    Decimal          @map("agreed_fee") @db.Decimal(10, 2)
+  status       EnrollmentStatus @default(ACTIVE)
+  enrolledAt   DateTime         @default(now()) @map("enrolled_at") @db.Timestamp(6)
+  student      Student          @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  course       Course           @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  payments     Payment[]
+  paymentCards PaymentCard[]
 
   @@unique([studentId, courseId], name: "student_course_unique")
   @@map("enrollments")
@@ -155,8 +113,6 @@ model Payment {
   enrollment           Enrollment           @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
   approval             PaymentApproval?
   approvalLogs         PaymentApprovalLog[]
-  receptionist         User                 @relation("ReceptionistPayments", fields: [receptionistId], references: [id], onDelete: Restrict)
-  receptionistId       String               @map("receptionist_id") @db.Uuid
 
   @@index([status])
   @@map("payments")
@@ -169,8 +125,7 @@ model PaymentApproval {
   rejectionReason String?       @map("rejection_reason") @db.Text
   reviewedAt      DateTime      @default(now()) @map("reviewed_at") @db.Timestamp(6)
   payment         Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  approvedBy      User          @relation("FoundingMemberApprovals", fields: [approvedById], references: [id], onDelete: Restrict)
-  approvedById    String        @map("founding_member_id") @db.Uuid
+  approvedBy      String        @map("approvedBy")
 
   @@map("payment_approvals")
 }
@@ -185,9 +140,7 @@ model PaymentApprovalLog {
   rejectionReason String?       @map("rejection_reason") @db.Text
   comments        String?       @db.Text
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
-
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  actor   User    @relation("ApprovalActor", fields: [actorId], references: [id], onDelete: Restrict)
 
   @@map("payment_approval_logs")
 }
@@ -214,8 +167,6 @@ model AuditLog {
   details   Json?
   ipAddress String?  @map("ip_address") @db.VarChar(45)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-
-  user User? @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([module])
   @@index([createdAt])

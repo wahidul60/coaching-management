@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import authRoutes from './modules/auth/routes/auth.routes.js';
 import studentRoutes from './modules/students/routes/student.routes.js';
+import courseRoutes from './modules/courses/routes/course.routes.js';
 import errorHandler from './middleware/error.middleware.js';
 import { loginRateLimiter } from './middleware/rateLimit.middleware.js';
 
@@ -23,6 +24,7 @@ app.get('/health', (req: express.Request, res: express.Response) => {
 // API Routes
 app.use('/api/auth', loginRateLimiter, authRoutes);
 app.use('/api/students', studentRoutes);
+app.use('/api/courses', courseRoutes);
 
 // Centralized Error Handler
 app.use(errorHandler);

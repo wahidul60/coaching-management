@@ -8,7 +8,10 @@ export const createStudentSchema = z.object({
   bloodGroup: z.string().trim().max(10, { message: 'Blood group cannot exceed 10 characters.' }).optional().nullable(),
   schoolCollege: z.string().trim().min(1, { message: 'School/College is required and cannot be empty.' }).max(150, { message: 'School/College cannot exceed 150 characters.' }),
   photoUrl: z.string().trim().optional().nullable(),
+  createdBy: z.string().uuid({ message: 'Created by user ID must be a valid UUID.' }),
 });
 
 export type CreateStudentInputDto = z.infer<typeof createStudentSchema>;
+
+
 

@@ -15,12 +15,12 @@ export const createStudent = async (input: CreateStudentInputDto) => {
   }
 
   // Find a fallback default user (e.g. admin or any valid user) for createdBy since authentication is disabled for students
-  const fallbackUser = await prisma.user.findFirst();
-  if (!fallbackUser) {
-    const error: any = new Error('System user not found for record creation.');
-    error.statusCode = 500;
-    throw error;
-  }
+  // const fallbackUser = await prisma.user.findFirst();
+  // if (!fallbackUser) {
+  //   const error: any = new Error('System user not found for record creation.');
+  //   error.statusCode = 500;
+  //   throw error;
+  // }
 
   const student = await prisma.student.create({
     data: {
@@ -31,7 +31,7 @@ export const createStudent = async (input: CreateStudentInputDto) => {
       bloodGroup: input.bloodGroup || null,
       schoolCollege: input.schoolCollege,
       photoUrl: input.photoUrl || null,
-      createdBy: fallbackUser.id,
+      createdBy: input.createdBy,
     },
   });
 
@@ -39,7 +39,7 @@ export const createStudent = async (input: CreateStudentInputDto) => {
 };
 
 export const studentService = {
-  createStudent,
+  createStudent
 };
 
 export default studentService;
